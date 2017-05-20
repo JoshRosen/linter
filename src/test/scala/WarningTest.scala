@@ -23,7 +23,7 @@ class WarningTest extends MustThrownMatchers {
   @Test
   def allIncludesAll(): Unit = {
     //TODO: could do it with reflection
-    val knownCount = 123
+    val knownCount = 124
     val count: Int = Warning.All.distinct.map {
       case AssigningOptionToNull => 1
       case AvoidOptionCollectionSize => 1
@@ -48,6 +48,7 @@ class WarningTest extends MustThrownMatchers {
       case IdenticalIfElseCondition => 1
       case IdenticalStatements => 1
       case IndexingWithNegativeNumber => 1
+      case IndexingOnANonIndexedSeq => 1
       case InefficientUseOfListSize(_, _, _) => 1
       case IntDivisionAssignedToFloat => 1
       case InvalidParamToRandomNextInt => 1
