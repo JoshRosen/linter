@@ -256,6 +256,7 @@ final class LinterPlugin(val global: Global) extends Plugin {
       val SeqLikeClass: Symbol = rootMirror.getClassByName(newTermName("scala.collection.SeqLike"))
       val SeqLikeContains: Symbol = SeqLikeClass.info.member(newTermName("contains"))
       val SeqLikeApply: Symbol = SeqLikeClass.info.member(newTermName("apply"))
+      val IndexedSeqLikeClass: Symbol = rootMirror.getClassByName(newTermName("scala.collection.IndexedSeqLike"))
       val MapFactoryClass = rootMirror.getClassByName(newTermName("scala.collection.generic.MapFactory"))
       val TraversableFactoryClass: Symbol = rootMirror.getClassByName(newTermName("scala.collection.generic.TraversableFactory"))
       val TraversableOnceClass: Symbol = rootMirror.getClassByName(newTermName("scala.collection.TraversableOnce"))
@@ -1943,6 +1944,12 @@ final class LinterPlugin(val global: Global) extends Plugin {
             && (col equalsStructure col1) =>
 
             warn(tree, UseLastNotApply(identOrCol(col)))
+
+          case Apply(Select(seq, _apply), List(index))
+            if methodImplements(tree.symbol, SeqLikeApply)
+            && !isLiteral(index)
+            && !seq.tpe.baseClasses.exists(_.tpe =:= IndexedSeqLikeClass.tpe) =>
+            warn(tree, IndexingOnANonIndexedSeq)
 
           case If(cond, thenp, elsep) if {//Microcosm
 

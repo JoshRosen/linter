@@ -45,6 +45,7 @@ final object Warning {
     IdenticalIfElseCondition,
     IdenticalStatements,
     IndexingWithNegativeNumber,
+    IndexingOnANonIndexedSeq,
     InefficientUseOfListSize("", "", ""),
     IntDivisionAssignedToFloat,
     InvalidParamToRandomNextInt,
@@ -228,6 +229,8 @@ case object IdenticalStatements extends
   Warning("You're doing the exact same thing twice or more.")
 case object IndexingWithNegativeNumber extends
   Warning("Using a negative index for a collection.")
+case object IndexingOnANonIndexedSeq extends
+    Warning("Indexing on a non-IndexedSeq may cause performance problems.")
 case object OptionOfOption extends
   Warning("Why would you need an Option of an Option?")
 case class UndesirableTypeInference(inferredType: String) extends

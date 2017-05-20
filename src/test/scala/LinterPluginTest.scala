@@ -123,7 +123,7 @@ final class LinterPluginTest extends MustThrownMatchers with ThrownStandardMatch
     should(defs+"""bool match { case true => 0 case false => 1 }""")("""Pattern matching on Boolean is probably better written as an if statement.""")
     should(defs+"""for (i <- 10 to 20) { if(i > 20) "" }""")("""This condition will never hold.""")
     should(defs+"""for (i <- 1 to 10) { 1/(i-1)  }""")("""Possible division by zero.""")
-    should(defs+"""{ val a = List(1,2,3); for (i <- 1 to 10) { println(a(i)) } }""")("""You will likely use a too large index.""")
+    should(defs+"""{ val a = IndexedSeq(1,2,3); for (i <- 1 to 10) { println(a(i)) } }""")("""You will likely use a too large index.""")
     should(defs+"""for (i <- 10 to 20) { if (i.toString.length == 3) "" }""")("""This condition will never hold.""")
     should(defs+"""val s = "hello"+util.Random.nextString(10)+"world"+util.Random.nextString(10)+"!"; if(s contains "world") ""; """)("""This contains always returns the same value: true""")
     should(defs+"""val s = "hello"+util.Random.nextString(10)+"world"+util.Random.nextString(10)+"!"; if(s startsWith "hell") ""; """)("""This startsWith always returns the same value: true""")
@@ -1514,7 +1514,7 @@ final class LinterPluginTest extends MustThrownMatchers with ThrownStandardMatch
   def UseLastNotApply(): Unit = {
     implicit val msg = ".last instead of "
     should("""val l = List(1, 2, 3); l(l.length - 1)""")
-    noLint("""val seq = Seq("a", "b"); seq(seq.size - 1)""")
+    noLint("""val seq = IndexedSeq("a", "b"); seq(seq.size - 1)""")
     noLint("""val v = Vector("a", "b"); v(v.length - 1)""")
     noLint("""val a = Array(4, 2); a(a.size - 1)""")
     noLint("""val s = "xyz"; s(s.length - 1)""")
@@ -2753,45 +2753,71 @@ final class LinterPluginTest extends MustThrownMatchers with ThrownStandardMatch
     implicit val msg = "negative index"
 
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(-1)
     """)
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.size-a.size-1)
     """)
     should("""
-      val a = List(1,2,3,4)
+      val a = IndexedSeq(1,2,3,4)
       val b = -a.size /* -4 */
       a(a.size/2 + b + 1) /* 2 - 4 + 1 == -1 */
     """)
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.size-a.length-1)
     """)
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       val b = "a"
       a(b.size-b.length-1)
     """)
 
     noLint("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.size-a.size)
     """)
     noLint("""
-      val a = List(1,2,3,4)
+      val a = IndexedSeq(1,2,3,4)
       val b = -a.size + 1 /* -3 */
       a(a.size/2 + b + 1) /* 2 - 3 + 1 == 0 */
     """)
     noLint("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.size-a.length)
     """)
     noLint("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       val b = "a"
       a(b.size-b.length)
+    """)
+  }
+
+  @Test
+  def collections__indexOnNonIndexedSeq(): Unit = {
+    implicit val msg = "non-IndexedSeq"
+    should("""
+      val x = 0
+      val a = Seq(1,2,3)
+      a(x)
+    """)
+    // If it's an IndexedSeq subtype then we should not throw a warning:
+    noLint("""
+      val x = 0
+      val a = Array(1,2,3)
+      a(x)
+    """)
+    noLint("""
+      val x = 0
+      val a = IndexedSeq(1,2,3)
+      a(x)
+    """)
+    // Ignore constant indexes for now, since those are less likely to lead to quadratic runtime.
+    noLint("""
+      val a = Seq(1,2,3)
+      a(2)
     """)
   }
 
@@ -2800,21 +2826,21 @@ final class LinterPluginTest extends MustThrownMatchers with ThrownStandardMatch
     implicit val msg = "too large index"
 
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.size)
     """)
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       a(a.length)
     """)
     should("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       val b = 5
       a(b-1)
     """)
 
     noLint("""
-      val a = List(1,2,3)
+      val a = IndexedSeq(1,2,3)
       val b = 5
       a(b-3)
     """)
